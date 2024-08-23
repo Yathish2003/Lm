@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Uploaded Image</h1>
+        <img src="{{imageUrl}}" alt="Uploaded Image" style="max-width: 500px;">
+        <p>Link to the image:</p>
+        <input type="text" value="{{imageUrl}}" readonly id="imageUrl">
+        <button id="copyButton">Copy URL</button>
+    </div>
+    <script src="/script.js"></script>
+</body>
+</html>
