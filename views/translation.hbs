@@ -3,29 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Translation</title>
-     <link rel="stylesheet" href="/styles.css">
+    <title>Translation Service</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Translation</h1>
-    <form action="/translate" method="POST">
-        <textarea name="text" placeholder="Enter text to translate" required></textarea>
-        <br>
-        <label for="targetLang">Target Language:</label>
-        <select name="targetLang" id="targetLang">
-            <option value="DE">German</option>
-            <option value="FR">French</option>
-            <option value="ES">Spanish</option>
-            <option value="EN">English</option>
-           
+    <h1>Translation Service</h1>
+
+    <form id="translation-form">
+        <label for="key-input">Key:</label>
+        <input type="text" id="key-input" name="key" placeholder="Enter key">
+
+        <label for="matching-keys">Matching Keys:</label>
+        <select id="matching-keys" size="5" style="display:none;"></select>
+
+        <label for="language">Select Language:</label>
+        <select id="language" name="targetLang">
+            <option value="en">English</option>
+            <option value="de">German</option>
         </select>
-        <br>
-        <button type="submit">Translate</button>
+
+        <label for="value-input">Value:</label>
+        <input type="text" id="value-input" name="value" placeholder="Translated value" readonly>
+
+        <button type="button" id="edit-btn">Edit</button>
+        <button type="button" id="save-btn" style="display:none;">Save</button>
     </form>
 
-    {{#if translation}}
-        <h2>Translation Result:</h2>
-        <p>{{translation}}</p>
-    {{/if}}
+    <script src="/js/translation.js"></script>
 </body>
 </html>

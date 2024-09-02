@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="/styles.css">
+    <script defer src="/js/dashboard.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
-        <h1>Welcome to LightMetrics</h1>
-        <a href="/images" class="button images-button">Images</a>
-        <a href="/translation" class="button translation-button">Translation</a>
+        <h1 data-translate-key="welcome_message">Welcome to LightMetrics</h1>
+        
+       
+        <label for="language-select" data-translate-key="lan">Select Language:</label>
+        <select id="language-select">
+            <option value="en">English</option>
+            <option value="de">German</option>
+           
+        </select>
+
+        <a href="/images" class="button images-button" data-translate-key="images_button">Images</a>
+        <a href="/translation" class="button translation-button" data-translate-key="translation_button">Translation</a>
     </div>
 </body>
 </html>
