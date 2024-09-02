@@ -12,22 +12,21 @@ const AWS = require('aws-sdk');
 const app = express();
 const port = 3000;
 
-// Configure AWS S3
+
 const s3 = new AWS.S3({
     apiVersion: '2006-03-01',
     signatureVersion: 'v4',
     region: process.env.AWS_REGION
 });
 
-// Paths for local translations
+
 const LOCAL_TRANSLATION_PATH = path.join(__dirname, 'locales');
 
-// Ensure the local translations directory exists
+
 if (!fs.existsSync(LOCAL_TRANSLATION_PATH)){
     fs.mkdirSync(LOCAL_TRANSLATION_PATH);
 }
 
-// Function to load translations from S3
 const loadTranslations = (lang) => {
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
@@ -38,7 +37,7 @@ const loadTranslations = (lang) => {
         s3.getObject(params, (err, data) => {
             if (err) {
                 if (err.code === 'NoSuchKey') {
-                    // If no translation file exists, return an empty object
+                   
                     resolve({});
                 } else {
                     reject(err);
@@ -55,7 +54,7 @@ const loadLocalTranslations = (lang) => {
     if (fs.existsSync(filePath)) {
         return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
     }
-    return {}; // Return an empty object if the file does not exist
+    return {}; 
 };
 
 const saveTranslationsLocally = (language, content) => {
@@ -72,7 +71,7 @@ const initializeTranslations = async () => {
     translations.en = loadLocalTranslations('en');
     translations.de = loadLocalTranslations('de');
 
-    // Load from S3 and update local files if not present
+  
     const s3Translations = {
         en: await loadTranslations('en'),
         de: await loadTranslations('de')
@@ -91,7 +90,7 @@ const initializeTranslations = async () => {
 
 initializeTranslations().catch(console.error);
 
-// Configure Passport.js for Google authentication
+
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -128,7 +127,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
+
 app.get('/', (req, res) => {
     if (req.isAuthenticated()) {
         res.redirect('/dashboard');
@@ -192,10 +191,9 @@ app.post('/upload', upload.single('image'), (req, res) => {
 
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
-        Key: `images/${Date.now().toString()}${path.extname(req.file.originalname)}`, // Store in "images" folder
+        Key: `images/${Date.now().toString()}${path.extname(req.file.originalname)}`,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
-        // ACL: 'public-read', // Uncomment if you want the file to be publicly readable
     };
 
     s3.upload(params, (err, data) => {
@@ -258,7 +256,7 @@ app.post('/api/translation/update', (req, res) => {
 
     translations[language][key] = value;
 
-    // Save translations to S3
+  
     const params = {
         Bucket: process.env.S3_BUCKET_NAME,
         Key: `translations/${language}.json`,
@@ -272,7 +270,7 @@ app.post('/api/translation/update', (req, res) => {
             return res.status(500).send('Failed to update translation.');
         }
 
-        // Save translations locally
+       
         saveTranslationsLocally(language, translations[language]);
 
         res.json({ success: true });
