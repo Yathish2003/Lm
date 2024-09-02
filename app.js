@@ -37,14 +37,11 @@ passport.deserializeUser((user, done) => {
     done(null, user);
 });
 
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
-
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
@@ -59,7 +56,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-
+// Function to load translations
 const loadTranslations = (lang) => {
     const filePath = path.join(__dirname, 'locales', `${lang}.json`);
     if (fs.existsSync(filePath)) {
@@ -140,7 +137,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
         Key: `images/${Date.now().toString()}${path.extname(req.file.originalname)}`, // Store in "images" folder
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
-    //    ACL:'public-read',
+        // ACL: 'public-read', // Uncomment if you want the file to be publicly readable
     };
 
     s3.upload(params, (err, data) => {
@@ -169,7 +166,6 @@ app.get('/list-images', (req, res) => {
             }
 
             const imageUrls = data.Contents.map(item => {
-              
                 return `http://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`;
             });
 
@@ -188,8 +184,8 @@ app.get('/api/translation/:language/:key', (req, res) => {
 
 app.get('/api/translation/:language', (req, res) => {
     const language = req.params.language;
-    const translations = loadTranslations(language);
-    res.json(translations);
+    const translation = loadTranslations(language);
+    res.json(translation);
 });
 
 app.post('/api/translation/update', (req, res) => {
@@ -201,10 +197,46 @@ app.post('/api/translation/update', (req, res) => {
 
     translations[language][key] = value;
 
-    fs.writeFile(path.join(__dirname, `locales/${language}.json`), JSON.stringify(translations[language], null, 2));
-
-    res.json({ success: true });
+    // Write the updated translation to the local file
+    fs.writeFile(path.join(__dirname, `locales/${language}.json`), JSON.stringify(translations[language], null, 2), (err) => {
+        if (err) {
+            console.error('Error writing translation file:', err);
+            return res.status(500).send('Failed to update translation.');
+        }
+        res.json({ success: true });
+    });
 });
+    // app.js
+// ... existing code ...
+
+// New route for gallery page
+app.get('/gallery', (req, res) => {
+    if (req.isAuthenticated()) {
+        const params = {
+            Bucket: process.env.S3_BUCKET_NAME,
+            Prefix: 'images/'
+        };
+
+        s3.listObjects(params, (err, data) => {
+            if (err) {
+                console.error('Error listing objects from S3:', err);
+                return res.status(500).send('Failed to list images.');
+            }
+
+            const imageUrls = data.Contents.map(item => {
+                return `http://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`;
+            });
+
+            res.render('gallery', { imageUrls });
+        });
+    } else {
+        res.redirect('/login');
+    }
+});
+
+// ... existing code ...
+
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

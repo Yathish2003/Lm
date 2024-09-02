@@ -11,9 +11,13 @@
         <h1>Upload an Image</h1>
         <form action="/upload" method="post" enctype="multipart/form-data">
             <input type="file" name="image" required>
-            <button type="submit" >Upload</button>
+            <button type="submit">Upload</button>
         </form>
+
+        <!-- New Button to Redirect to the Gallery Page -->
+        <button onclick="window.location.href='/gallery'">View Uploaded Images</button>
     </div>
+
     <script src="/script.js"></script>
 </body>
 </html>

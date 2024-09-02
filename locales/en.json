@@ -1,12 +1,12 @@
 {
   "welcome_message": "Welcome to Light Metrics",
-  "login": "Login",
+  "login": "Auf Wiedersehennnnnnnnnnn",
   "edit": "Edit",
   "save": "Save",
   "key_placeholder": "Enter key",
   "value_placeholder": "Translated value",
-   "images_button":"Image",
-   "uploadImageTitle": "Upload Image",
-   "uploadImageHeading": "Upload an Image",
-   "uploadButton": "Upload"
+  "images_button": "Image",
+  "uploadImageTitle": "Upload Image",
+  "uploadImageHeading": "Upload an Image",
+  "uploadButton": "Upload"
 }

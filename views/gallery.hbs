@@ -1,0 +1,36 @@
+<h1>Uploaded Images Gallery</h1>
+<div class="gallery">
+    {{#each imageUrls}}
+        <div class="image-container">
+            <img src="{{this}}" alt="Uploaded Image" class="gallery-image">
+        </div>
+    {{/each}}
+</div>
+
+<style>
+    .gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center; /* Center the gallery */
+        padding: 10px; /* Add padding to the gallery for spacing */
+    }
+    .image-container {
+        width: 200px;
+        height: 200px;
+        border: 1px solid #ddd; /* Border for better visibility */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9f9f9; /* Background color to avoid blank areas */
+        overflow: hidden; /* Ensure no overflow */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
+        border-radius: 5px; /* Optional: Adds rounded corners */
+    }
+    .gallery-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Ensure the image covers the container */
+        display: block; /* Remove any potential gaps from inline elements */
+    }
+</style>
