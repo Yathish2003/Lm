@@ -19,6 +19,78 @@ const s3 = new AWS.S3({
     region: process.env.AWS_REGION
 });
 
+// Paths for local translations
+const LOCAL_TRANSLATION_PATH = path.join(__dirname, 'locales');
+
+// Ensure the local translations directory exists
+if (!fs.existsSync(LOCAL_TRANSLATION_PATH)){
+    fs.mkdirSync(LOCAL_TRANSLATION_PATH);
+}
+
+// Function to load translations from S3
+const loadTranslations = (lang) => {
+    const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `translations/${lang}.json`
+    };
+
+    return new Promise((resolve, reject) => {
+        s3.getObject(params, (err, data) => {
+            if (err) {
+                if (err.code === 'NoSuchKey') {
+                    // If no translation file exists, return an empty object
+                    resolve({});
+                } else {
+                    reject(err);
+                }
+            } else {
+                resolve(JSON.parse(data.Body.toString('utf-8')));
+            }
+        });
+    });
+};
+
+const loadLocalTranslations = (lang) => {
+    const filePath = path.join(LOCAL_TRANSLATION_PATH, `${lang}.json`);
+    if (fs.existsSync(filePath)) {
+        return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    }
+    return {}; // Return an empty object if the file does not exist
+};
+
+const saveTranslationsLocally = (language, content) => {
+    const filePath = path.join(LOCAL_TRANSLATION_PATH, `${language}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf-8');
+};
+
+const translations = {
+    en: {},
+    de: {}
+};
+
+const initializeTranslations = async () => {
+    translations.en = loadLocalTranslations('en');
+    translations.de = loadLocalTranslations('de');
+
+    // Load from S3 and update local files if not present
+    const s3Translations = {
+        en: await loadTranslations('en'),
+        de: await loadTranslations('de')
+    };
+
+    if (Object.keys(translations.en).length === 0) {
+        translations.en = s3Translations.en;
+        saveTranslationsLocally('en', translations.en);
+    }
+
+    if (Object.keys(translations.de).length === 0) {
+        translations.de = s3Translations.de;
+        saveTranslationsLocally('de', translations.de);
+    }
+};
+
+initializeTranslations().catch(console.error);
+
 // Configure Passport.js for Google authentication
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -55,20 +127,6 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-// Function to load translations
-const loadTranslations = (lang) => {
-    const filePath = path.join(__dirname, 'locales', `${lang}.json`);
-    if (fs.existsSync(filePath)) {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    }
-    return {};
-};
-
-const translations = {
-    en: loadTranslations('en'),
-    de: loadTranslations('de')
-};
 
 // Routes
 app.get('/', (req, res) => {
@@ -184,8 +242,11 @@ app.get('/api/translation/:language/:key', (req, res) => {
 
 app.get('/api/translation/:language', (req, res) => {
     const language = req.params.language;
-    const translation = loadTranslations(language);
-    res.json(translation);
+    loadTranslations(language).then(translation => {
+        res.json(translation);
+    }).catch(err => {
+        res.status(500).send('Failed to load translations.');
+    });
 });
 
 app.post('/api/translation/update', (req, res) => {
@@ -197,19 +258,27 @@ app.post('/api/translation/update', (req, res) => {
 
     translations[language][key] = value;
 
-    // Write the updated translation to the local file
-    fs.writeFile(path.join(__dirname, `locales/${language}.json`), JSON.stringify(translations[language], null, 2), (err) => {
+    // Save translations to S3
+    const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `translations/${language}.json`,
+        Body: JSON.stringify(translations[language], null, 2),
+        ContentType: 'application/json'
+    };
+
+    s3.upload(params, (err, data) => {
         if (err) {
-            console.error('Error writing translation file:', err);
+            console.error('Error uploading translation file to S3:', err);
             return res.status(500).send('Failed to update translation.');
         }
+
+        // Save translations locally
+        saveTranslationsLocally(language, translations[language]);
+
         res.json({ success: true });
     });
 });
-    // app.js
-// ... existing code ...
 
-// New route for gallery page
 app.get('/gallery', (req, res) => {
     if (req.isAuthenticated()) {
         const params = {
@@ -233,10 +302,6 @@ app.get('/gallery', (req, res) => {
         res.redirect('/login');
     }
 });
-
-// ... existing code ...
-
-
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
